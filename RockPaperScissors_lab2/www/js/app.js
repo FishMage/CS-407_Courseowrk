@@ -105,13 +105,18 @@ lab2.factory('processMove', function() {
     self.checkWins =  function(player1_choice, player2_choice) {
       var a = player1_choice;
       var b = player2_choice;
-
+      console.log("inside processMove");
+      console.log("p1Choice:"+ a);
+      console.log("p2Choice:"+ b);
       /* TODO: check wins by using logic from function below to determine which player won the current round */
       /* Google is your friend in this situation ;) */
-
       /* return 0 if tie */
-      /* return 1 if player 1 won the current round */
-      /* return 2 if player 2 won the current round */
+      if( a == b)
+        return 0;
+      else if( a - b == 1 || a - b == -2)
+        return 1;
+      else if( b - a == 1 || b - a == -2)
+        return 2;
     };
     self.getChoiceAsNumber = function(player_choice) {
       if (angular.equals(player_choice, 'rock')) return 0;
@@ -158,15 +163,18 @@ lab2.controller('startPage', function($rootScope, $scope, $ionicViewSwitcher, $s
 
 lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal, $ionicLoading, $ionicViewSwitcher, $state ,$stateParams, navigation) {
   /* TODO: Create processMove factory instance and place on local scope */
+  $scope.processMove = new processMove();
 
   $ionicLoading.show({ template: $rootScope.player1_name+"'s Turn", noBackdrop: false, duration: 1250 }); // Display modal with current players turn
 
   $scope.title = "Rock Paper Scissors"; // Set title for nav bar in HTML using binding
 
   /* TODO: Grab name of player 1 from $rootScope and set to current player variable on local scope */
-
+  $scope.player1_name = $rootScope.player1_name;
   /* TODO: Grab wins of player 1 from $stateParams and put on local scope */
+  $scope.player1_wins = $stateParams.player1_wins;
   /* TODO: Grab wins of player 2 from $stateParams and put on local scope */
+  $scope.player2_wins = $stateParams.player2_wins;
 
   $scope.onNext = function (choice) {
 
@@ -179,6 +187,9 @@ lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal
       else {
         $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to results state and pass winner since player1 has best 2/3 */
+        $state.go("results",{
+          'winner': 1
+          })
       }
     }
     else if ($rootScope.wasInStartState != true && $stateParams.player2_wins >= 2) // Check if previous state was start state using variable on $rootScope
@@ -190,6 +201,9 @@ lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal
       else {
         $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to results state and pass winner since player2 has best 2/3 */
+          $state.go('results',{
+          'winner': 2
+          })
       }
     }
     else {
@@ -209,6 +223,12 @@ lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal
       else {
         $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to player2 state since neither player has 2/3 */
+        $state.go("player2",{
+          'player1_choice': $scope.processMove.getChoiceAsNumber(choice),
+          'player2_choice': $scope.player2_choice,
+          'player1_wins': $scope.player1_wins,
+          'player2_wins': $scope.player2_wins
+        })
       }
     }
   };
@@ -216,6 +236,7 @@ lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal
 
 lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal, $ionicLoading, $ionicViewSwitcher, $state, $stateParams, navigation) {
   /* TODO: Create processMove factory instance and place on local scope */
+  $scope.processMove = new processMove();
 
   $ionicLoading.show({ template: $rootScope.player2_name+"'s Turn", noBackdrop: false, duration: 1250 });
   $scope.title = "Rock Paper Scissors";
@@ -224,16 +245,31 @@ lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal
   // The rootScope will be cleared upon a reset
 
   /* TODO: Grab name of player 2 from $rootScope and set to current player */
-
+  $scope.player2_name = $rootScope.player2_name;
   /* TODO: Grab wins of player 1 from $stateParams and put on local scope */
+  $scope.player1_wins = $stateParams.player1_wins;
   /* TODO: Grab wins of player 2 from $stateParams and put on local scope */
+  $scope.player2_wins = $stateParams.player2_wins;
 
   $scope.onNext = function (choice) {
 
-    /* TODO: Use processMove factory instance to check if player1 has a win */
+    $scope.player2_choice = $scope.processMove.getChoiceAsNumber(choice);
 
     /* TODO: Use processMove factory instance to check if player1 has a win */
+    if($scope.processMove.checkWins($stateParams.player1_choice,$scope.player2_choice) == 1){
+      // $scope.playe1_wins = $scope.player1_wins + 1 ;
+      $scope.playe1_wins += 1 ;
+      console.log("Player1_wins++"+ $scope.player1_wins);
+      $stateParams.player1_wins = $scope.player1_wins;
+    }
 
+    /* TODO: Use processMove factory instance to check if player2 has a win */
+    if($scope.processMove.checkWins($stateParams.player1_choice,$scope.player2_choice) == 2){
+      $scope.playe2_wins += 1;
+      //$scope.playe2_wins = $scope.player2_wins +1;
+      console.log("Player2_wins++"+ $scope.player2_wins);
+      $stateParams.player2_wins = $scope.player2_wins;
+    }
     if ($stateParams.player1_wins >= 2) // Check if player1 has best 2/3
     {
       if(window.plugins && window.plugins.nativepagetransitions) {
@@ -242,6 +278,9 @@ lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal
       else {
         $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to results state and pass winner since player1 has best 2/3 */
+        $state.go("results",{
+          'winner': 1
+        })
       }
     }
     else if ($stateParams.player2_wins >= 2) // Check if player2 has best 2/3
@@ -250,8 +289,11 @@ lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal
         // Ignore this block for now; this is for native transitions (More on Wednesday 2/22/17) //
       }
       else {
-        $ionicViewSwitcher.nextDirection('forward');
+          $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to results state and pass winner since player2 has best 2/3 */
+          $state.go("results",{
+              'winner': 2
+          })
       }
     } else {
       if(window.plugins && window.plugins.nativepagetransitions) {
@@ -260,6 +302,12 @@ lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal
       else {
         $ionicViewSwitcher.nextDirection('forward');
         /* TODO: Transition to player1 state since neither player has 2/3 */
+        $state.go("player1",{
+          'player1_choice': $stateParams.player1_choice,
+          'player2_choice': $scope.player2_choice,
+          'player1_wins': $scope.player1_wins,
+          'player2_wins': $scope.player2_wins
+        })
       }
     }
   };
