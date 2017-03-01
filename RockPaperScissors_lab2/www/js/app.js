@@ -23,6 +23,11 @@ var lab2 = angular.module('lab2', ['ionic'])
   });
 })
 
+lab2.run(function($ionicPlatform, $rootScope, $ionicHistory) {
+    $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+        $ionicHistory.clearCache();
+    });
+});
 /* The block below you can ignore. It is used to demonstrate the utilization of native transitions in Ionic */
 
 lab2.service('navigation', function($state) {
@@ -162,18 +167,14 @@ lab2.controller('startPage', function($rootScope, $scope, $ionicViewSwitcher, $s
 });
 
 lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal, $ionicLoading, $ionicViewSwitcher, $state ,$stateParams, navigation) {
-  /* TODO: Create processMove factory instance and place on local scope */
   $scope.processMove = new processMove();
 
   $ionicLoading.show({ template: $rootScope.player1_name+"'s Turn", noBackdrop: false, duration: 1250 }); // Display modal with current players turn
 
   $scope.title = "Rock Paper Scissors"; // Set title for nav bar in HTML using binding
 
-  /* TODO: Grab name of player 1 from $rootScope and set to current player variable on local scope */
   $scope.player1_name = $rootScope.player1_name;
-  /* TODO: Grab wins of player 1 from $stateParams and put on local scope */
   $scope.player1_wins = $stateParams.player1_wins;
-  /* TODO: Grab wins of player 2 from $stateParams and put on local scope */
   $scope.player2_wins = $stateParams.player2_wins;
 
   $scope.onNext = function (choice) {
@@ -235,7 +236,6 @@ lab2.controller('player1', function(processMove, $rootScope, $scope, $ionicModal
 });
 
 lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal, $ionicLoading, $ionicViewSwitcher, $state, $stateParams, navigation) {
-  /* TODO: Create processMove factory instance and place on local scope */
   $scope.processMove = new processMove();
 
   $ionicLoading.show({ template: $rootScope.player2_name+"'s Turn", noBackdrop: false, duration: 1250 });
@@ -244,29 +244,28 @@ lab2.controller('player2', function(processMove, $rootScope, $scope, $ionicModal
   if (!$rootScope.player1_name) $state.go('startPage'); // This sends app back to starting controller if reset occurs
   // The rootScope will be cleared upon a reset
 
-  /* TODO: Grab name of player 2 from $rootScope and set to current player */
   $scope.player2_name = $rootScope.player2_name;
-  /* TODO: Grab wins of player 1 from $stateParams and put on local scope */
   $scope.player1_wins = $stateParams.player1_wins;
-  /* TODO: Grab wins of player 2 from $stateParams and put on local scope */
   $scope.player2_wins = $stateParams.player2_wins;
 
   $scope.onNext = function (choice) {
 
     $scope.player2_choice = $scope.processMove.getChoiceAsNumber(choice);
+    $scope.player1_choice = $stateParams.player1_choice;
+    console.log("player1_wins: "+ $scope.player1_wins);
 
     /* TODO: Use processMove factory instance to check if player1 has a win */
-    if($scope.processMove.checkWins($stateParams.player1_choice,$scope.player2_choice) == 1){
+    if($scope.processMove.checkWins($scope.player1_choice,$scope.player2_choice) == 1){
       // $scope.playe1_wins = $scope.player1_wins + 1 ;
-      $scope.playe1_wins += 1 ;
+      $scope.player1_wins += 1 ;
       console.log("Player1_wins++"+ $scope.player1_wins);
       $stateParams.player1_wins = $scope.player1_wins;
     }
 
     /* TODO: Use processMove factory instance to check if player2 has a win */
-    if($scope.processMove.checkWins($stateParams.player1_choice,$scope.player2_choice) == 2){
-      $scope.playe2_wins += 1;
-      //$scope.playe2_wins = $scope.player2_wins +1;
+    if($scope.processMove.checkWins($scope.player1_choice,$scope.player2_choice) == 2){
+      $scope.player2_wins += 1;
+      // $scope.playe2_wins = $scope.player2_wins +1;
       console.log("Player2_wins++"+ $scope.player2_wins);
       $stateParams.player2_wins = $scope.player2_wins;
     }
